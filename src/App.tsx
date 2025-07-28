@@ -175,7 +175,7 @@ export default function App() {
       <div className="min-h-screen pb-28">
         <header className="bg-white border-b border-slate-200 px-4 py-3">
           <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
-            <h1 className="text-xl font-semibold">mixtape.fm</h1>
+            <h1 className="text-xl font-semibold">tunes.fit</h1>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setPairOpen(true)}
