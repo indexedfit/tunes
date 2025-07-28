@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Aesthetic: subtle mono + glass player */
+body { @apply font-mono text-slate-800; }
+
+.btn {
+  @apply inline-flex items-center justify-center px-3 py-1.5 text-sm border rounded transition;
+  @apply border-slate-300 bg-white hover:bg-slate-50;
+}
+.btn-primary { @apply bg-slate-900 text-white border-slate-900 hover:bg-slate-800; }
+.btn-secondary { @apply bg-white text-slate-700 border-slate-300 hover:bg-slate-100; }
+.box { @apply bg-white border border-slate-200 rounded; }
+
+/* Player glass */
+.player-glass {
+  backdrop-filter: blur(8px);
+  background: linear-gradient(to right, rgba(15,23,42,0.75), rgba(2,6,23,0.6));
+}
