@@ -1,3 +1,4 @@
+// src/components/Player.tsx
 import React, { useEffect, useRef, useState } from "react";
 import type { TrackMeta } from "../types";
 import { trackUrl } from "../utils/opfs";
@@ -23,11 +24,21 @@ export function Player({
   const track = index != null ? queue[index] : null;
 
   useEffect(() => {
-    let alive = true; let created: string | null = null;
-    setUrl(null); setPos(0); setDuration(0);
+    let alive = true;
+    let created: string | null = null;
+    setUrl(null);
+    setPos(0);
+    setDuration(0);
     if (!track) return;
-    trackUrl(track.cid).then(u => { if (!alive) return; created = u; setUrl(u); });
-    return () => { alive = false; if (created) URL.revokeObjectURL(created); };
+    trackUrl(track.cid).then((u) => {
+      if (!alive) return;
+      created = u;
+      setUrl(u);
+    });
+    return () => {
+      alive = false;
+      if (created) URL.revokeObjectURL(created);
+    };
   }, [track?.cid]);
 
   // MediaSession + keyboard
@@ -49,8 +60,14 @@ export function Player({
     navigator.mediaSession.metadata = new MediaMetadata({ title: track.name });
     navigator.mediaSession.setActionHandler("previoustrack", () => prev());
     navigator.mediaSession.setActionHandler("nexttrack", () => next());
-    navigator.mediaSession.setActionHandler("play", () => { audioRef.current?.play(); setPlaying(true); });
-    navigator.mediaSession.setActionHandler("pause", () => { audioRef.current?.pause(); setPlaying(false); });
+    navigator.mediaSession.setActionHandler("play", () => {
+      audioRef.current?.play();
+      setPlaying(true);
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+      audioRef.current?.pause();
+      setPlaying(false);
+    });
   }, [track]);
 
   // progress loop
@@ -89,36 +106,47 @@ export function Player({
     );
   };
   const seekTo = (p: number) => {
-    const a = audioRef.current; if (!a) return;
+    const a = audioRef.current;
+    if (!a) return;
     a.currentTime = p * (a.duration || 0);
   };
 
   return (
     <div className="player">
-      <div className="player-left"><div className="player-cover ph">🎵</div>
-        <div className="player-meta"><div className="player-title">{track?.name || "Nothing playing"}</div></div>
+      <div className="player-left">
+        <div className="player-cover ph">🎵</div>
+        <div className="player-meta">
+          <div className="player-title">{track?.name || "Nothing playing"}</div>
+        </div>
       </div>
       <div className="player-center">
         <div className="player-controls">
-          <button className="icon-btn" onClick={prev}><SkipBack size={18} /></button>
-          <button className="icon-btn primary" onClick={toggle}>{playing ? <Pause size={18}/> : <Play size={18}/>}</button>
-          <button className="icon-btn" onClick={next}><SkipForward size={18} /></button>
+          <button className="icon-btn" onClick={prev}>
+            <SkipBack size={18} />
+          </button>
+          <button className="icon-btn primary" onClick={toggle}>
+            {playing ? <Pause size={18} /> : <Play size={18} />}
+          </button>
+          <button className="icon-btn" onClick={next}>
+            <SkipForward size={18} />
+          </button>
         </div>
         <input
           type="range"
+          className="player-progress-bar"
           min={0}
           max={1}
           step={0.001}
           value={pos}
           onChange={(e) => seekTo(parseFloat(e.currentTarget.value))}
-          style={{ width: "min(700px,90%)" }}
         />
       </div>
       <audio
         ref={audioRef}
         src={url || undefined}
         onCanPlay={(e) => {
-          const a = e.currentTarget; const d = a.duration || 0;
+          const a = e.currentTarget;
+          const d = a.duration || 0;
           setDuration(d);
           if (track && isFinite(d)) onDuration(track.cid, d);
         }}
@@ -129,4 +157,3 @@ export function Player({
     </div>
   );
 }
-

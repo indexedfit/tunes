@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { useEffect, useState } from "react";
 import { usePlaylists } from "./yjs/playlists";
 import { PlaylistSelector } from "./components/PlaylistSelector";
@@ -6,11 +7,13 @@ import { TrackList } from "./components/TrackList";
 import { Player } from "./components/Player";
 import { ChatPane } from "./components/ChatPane";
 import type { TrackMeta } from "./types";
+import { Menu } from "lucide-react";
 
 export default function App() {
   const { playlists, current, setCurrent, ready } = usePlaylists();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [playIndex, setPlayIndex] = useState<number | null>(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (ready && current) {
@@ -19,8 +22,16 @@ export default function App() {
     }
   }, [current?.id, ready]);
 
+  const handleSelect = (id: string) => {
+    setCurrent(id);
+    setSidebarOpen(false); // Close sidebar on selection
+  };
+
   if (!ready || !current) return null;
-  const queue: TrackMeta[] = current.items.toArray().map(cid => current.registry.get(cid)).filter(Boolean) as TrackMeta[];
+  const queue: TrackMeta[] = current.items
+    .toArray()
+    .map((cid) => current.registry.get(cid))
+    .filter(Boolean) as TrackMeta[];
 
   const setTrackDuration = (cid: string, dur: number) => {
     current.doc.transact(() => {
@@ -32,38 +43,56 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isSidebarOpen ? "sidebar-visible" : ""}`}>
       <aside className="sidebar">
         <PlaylistSelector
           playlists={playlists}
           current={current}
-          onSelect={(id) => setCurrent(id)}
+          onSelect={handleSelect}
         />
       </aside>
-      <div className="main-content">
-        <header className="header">
-          <div style={{ fontWeight: 700 }}>🎵 tunes.fit</div>
-          <div className="flex-1" />
-          <UploadButton key={current.id} playlist={current} />
-        </header>
-        <main className="content-area">
-          <TrackList
-            playlist={current}
-            selected={selected}
-            onSelectionChange={setSelected}
-            onPlay={(i) => setPlayIndex(i)}
+
+      <div className="content-wrapper">
+        <div className="main-content">
+          <header className="header">
+            <button
+              className="menu-toggle"
+              onClick={() => setSidebarOpen((s) => !s)}
+            >
+              <Menu size={20} />
+            </button>
+            <div style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+              🎵 tunes.fit
+            </div>
+            <div className="flex-1" />
+            <UploadButton key={current.id} playlist={current} />
+          </header>
+          <main className="content-area">
+            <TrackList
+              playlist={current}
+              selected={selected}
+              onSelectionChange={setSelected}
+              onPlay={(i) => setPlayIndex(i)}
+            />
+          </main>
+        </div>
+        <div className="player-dock">
+          <Player
+            queue={queue}
+            index={playIndex}
+            setIndex={setPlayIndex}
+            onDuration={setTrackDuration}
           />
-        </main>
+        </div>
       </div>
+
       <ChatPane playlist={current} />
-      <div className="player-dock">
-        <Player
-          queue={queue}
-          index={playIndex}
-          setIndex={setPlayIndex}
-          onDuration={setTrackDuration}
+      {isSidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
         />
-      </div>
+      )}
     </div>
   );
 }
