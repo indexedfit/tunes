@@ -60,14 +60,12 @@ export function Player({
     navigator.mediaSession.metadata = new MediaMetadata({ title: track.name });
     navigator.mediaSession.setActionHandler("previoustrack", () => prev());
     navigator.mediaSession.setActionHandler("nexttrack", () => next());
-    navigator.mediaSession.setActionHandler("play", () => {
-      audioRef.current?.play();
-      setPlaying(true);
-    });
-    navigator.mediaSession.setActionHandler("pause", () => {
-      audioRef.current?.pause();
-      setPlaying(false);
-    });
+    navigator.mediaSession.setActionHandler("play", () =>
+      audioRef.current?.play(),
+    );
+    navigator.mediaSession.setActionHandler("pause", () =>
+      audioRef.current?.pause(),
+    );
   }, [track]);
 
   // progress loop
@@ -87,10 +85,8 @@ export function Player({
     if (!a) return;
     if (a.paused) {
       a.play();
-      setPlaying(true);
     } else {
       a.pause();
-      setPlaying(false);
     }
   };
   const next = () =>
@@ -144,6 +140,8 @@ export function Player({
       <audio
         ref={audioRef}
         src={url || undefined}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         onCanPlay={(e) => {
           const a = e.currentTarget;
           const d = a.duration || 0;

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// src/components/TrackList.tsx
+import React, { useEffect, useRef, useState } from "react";
 import type { PlaylistDoc } from "../yjs/playlists";
 import type { TrackMeta } from "../types";
 
@@ -14,19 +15,25 @@ export function TrackList({
   onPlay: (index: number) => void;
 }) {
   const [tracks, setTracks] = useState<TrackMeta[]>(
-    playlist.items.toArray().map(cid => playlist.registry.get(cid)).filter(Boolean) as TrackMeta[]
+    playlist.items
+      .toArray()
+      .map((cid) => playlist.registry.get(cid))
+      .filter(Boolean) as TrackMeta[],
   );
-  
+
   useEffect(() => {
     const updateTracks = () => {
-      const newTracks = playlist.items.toArray().map(cid => playlist.registry.get(cid)).filter(Boolean) as TrackMeta[];
+      const newTracks = playlist.items
+        .toArray()
+        .map((cid) => playlist.registry.get(cid))
+        .filter(Boolean) as TrackMeta[];
       setTracks(newTracks);
     };
-    
+
     updateTracks();
     playlist.items.observe(updateTracks);
     playlist.registry.observe(updateTracks);
-    
+
     return () => {
       playlist.items.unobserve(updateTracks);
       playlist.registry.unobserve(updateTracks);
@@ -68,11 +75,34 @@ function Row({
   onClick: () => void;
   onDoubleClick: () => void;
 }) {
+  const rowRef = useRef<HTMLTableRowElement>(null);
+
+  const handleClick = () => {
+    if (rowRef.current) {
+      rowRef.current.classList.add("clicked-feedback");
+      setTimeout(() => {
+        rowRef.current?.classList.remove("clicked-feedback");
+      }, 33);
+    }
+    onClick();
+  };
+
+  const handleDoubleClick = () => {
+    if (rowRef.current) {
+      rowRef.current.classList.add("clicked-feedback");
+      setTimeout(() => {
+        rowRef.current?.classList.remove("clicked-feedback");
+      }, 33);
+    }
+    onDoubleClick();
+  };
+
   return (
     <tr
+      ref={rowRef}
       className={`album-list-row ${active ? "selected" : ""}`}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       draggable={active}
       onDragStart={(e) => {
         if (active)
