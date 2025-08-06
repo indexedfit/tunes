@@ -17,15 +17,16 @@ export function PlaylistSelector({
   const moveTracksTo = (cids: string[], targetId: string) => {
     current.doc.transact(() => {
       const map = current.doc.getMap("playlists");
-      const dest = map.get(targetId);
+      const dest = map.get(targetId) as Y.Map<any> | undefined;
       if (!dest) return;
-      const destTracks = dest.get("tracks") as Y.Array<any>;
-      const srcTracks = current.tracks.toArray();
+      let destItems = dest.get("items") as Y.Array<string> | undefined;
+      if (!(destItems instanceof Y.Array)) {
+        destItems = new Y.Array<string>();
+        dest.set("items", destItems);
+      }
+      const have = new Set(destItems.toArray());
       cids.forEach((cid) => {
-        const t = srcTracks.find((x) => x.cid === cid);
-        if (t && !destTracks.toArray().some((x: any) => x.cid === cid)) {
-          destTracks.push([t]);
-        }
+        if (!have.has(cid)) destItems!.push([cid]);
       });
     });
   };
@@ -37,7 +38,7 @@ export function PlaylistSelector({
       const map = current.doc.getMap("playlists");
       const rec = new Y.Map();
       rec.set("info", { id, name: name.trim() });
-      rec.set("tracks", new Y.Array());
+      rec.set("items", new Y.Array<string>());
       rec.set("chat", new Y.Array());
       map.set(id, rec);
       onSelect(id);

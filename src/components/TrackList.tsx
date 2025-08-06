@@ -13,12 +13,24 @@ export function TrackList({
   onSelectionChange: (s: Set<string>) => void;
   onPlay: (index: number) => void;
 }) {
-  const [tracks, setTracks] = useState<TrackMeta[]>(playlist.tracks.toArray());
+  const [tracks, setTracks] = useState<TrackMeta[]>(
+    playlist.items.toArray().map(cid => playlist.registry.get(cid)).filter(Boolean) as TrackMeta[]
+  );
+  
   useEffect(() => {
-    setTracks(playlist.tracks.toArray());
-    const obs = () => setTracks(playlist.tracks.toArray());
-    playlist.tracks.observe(obs);
-    return () => playlist.tracks.unobserve(obs);
+    const updateTracks = () => {
+      const newTracks = playlist.items.toArray().map(cid => playlist.registry.get(cid)).filter(Boolean) as TrackMeta[];
+      setTracks(newTracks);
+    };
+    
+    updateTracks();
+    playlist.items.observe(updateTracks);
+    playlist.registry.observe(updateTracks);
+    
+    return () => {
+      playlist.items.unobserve(updateTracks);
+      playlist.registry.unobserve(updateTracks);
+    };
   }, [playlist.id]);
 
   return (

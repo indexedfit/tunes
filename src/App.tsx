@@ -19,18 +19,14 @@ export default function App() {
     }
   }, [current?.id, ready]);
 
-  if (!ready) return null;
-  const queue: TrackMeta[] = current.tracks.toArray();
+  if (!ready || !current) return null;
+  const queue: TrackMeta[] = current.items.toArray().map(cid => current.registry.get(cid)).filter(Boolean) as TrackMeta[];
 
   const setTrackDuration = (cid: string, dur: number) => {
     current.doc.transact(() => {
-      const idx = current.tracks.toArray().findIndex((t) => t.cid === cid);
-      if (idx >= 0) {
-        const cur = current.tracks.get(idx);
-        if (!cur.duration || Math.abs((cur.duration || 0) - dur) > 0.5) {
-          current.tracks.delete(idx, 1);
-          current.tracks.insert(idx, [{ ...cur, duration: dur } as any]);
-        }
+      const cur = current.registry.get(cid);
+      if (cur && (!cur.duration || Math.abs((cur.duration || 0) - dur) > 0.5)) {
+        current.registry.set(cid, { ...cur, duration: dur });
       }
     });
   };
